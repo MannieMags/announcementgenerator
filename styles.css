@@ -1,0 +1,253 @@
+/* SADV Brand Colors - Based on website branding */
+:root {
+    --sadv-primary: #00A3E0; /* Bright blue */
+    --sadv-secondary: #0066CC; /* Deep blue */
+    --sadv-accent: #FF6B35; /* Orange accent */
+    --sadv-dark: #1A1A2E;
+    --sadv-light: #F5F5F5;
+    --sadv-success: #00C853;
+    --sadv-warning: #FFB300;
+    --sadv-danger: #E53935;
+    --sadv-text: #333333;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, var(--sadv-primary) 0%, var(--sadv-secondary) 100%);
+    min-height: 100vh;
+    padding: 20px;
+    color: var(--sadv-text);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+header {
+    text-align: center;
+    color: white;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+}
+
+header h1 {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+header h2 {
+    font-size: 1.5em;
+    font-weight: 300;
+    opacity: 0.9;
+}
+
+.form-container {
+    background: white;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    margin-bottom: 30px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--sadv-dark);
+}
+
+input[type="text"],
+input[type="date"],
+input[type="time"],
+select,
+textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+input[type="text"]:focus,
+input[type="date"]:focus,
+input[type="time"]:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--sadv-primary);
+    box-shadow: 0 0 0 3px rgba(0, 163, 224, 0.1);
+}
+
+select {
+    cursor: pointer;
+}
+
+textarea {
+    resize: vertical;
+}
+
+.button-group {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.btn {
+    padding: 14px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--sadv-primary), var(--sadv-secondary));
+    color: white;
+    flex: 1;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 163, 224, 0.4);
+}
+
+.btn-secondary {
+    background: #757575;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #616161;
+}
+
+.btn-success {
+    background: var(--sadv-success);
+    color: white;
+    flex: 1;
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 200, 83, 0.4);
+}
+
+.preview-section {
+    background: white;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.preview-section.hidden {
+    display: none;
+}
+
+.preview-section h3 {
+    color: var(--sadv-dark);
+    margin-bottom: 20px;
+    font-size: 1.8em;
+    text-align: center;
+}
+
+#canvasContainer {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+    padding: 30px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+#announcementCanvas {
+    max-width: 100%;
+    height: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    border-radius: 8px;
+}
+
+.download-buttons {
+    display: flex;
+    gap: 15px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 1.8em;
+    }
+
+    header h2 {
+        font-size: 1.2em;
+    }
+
+    .form-container,
+    .preview-section {
+        padding: 20px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .button-group,
+    .download-buttons {
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+    }
+}
+
+/* Loading Animation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid var(--sadv-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}

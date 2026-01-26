@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SADV Announcement Generator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>SADV Customer Care</h1>
+            <h2>Announcement Generator</h2>
+        </header>
+
+        <div class="form-container">
+            <form id="announcementForm">
+                <div class="form-group">
+                    <label for="logoUpload">Company Logo (Optional)</label>
+                    <input type="file" id="logoUpload" accept="image/*">
+                    <small style="color: #666; display: block; margin-top: 5px;">Upload your logo to replace the SADV text in the header</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="incidentType">Incident Type *</label>
+                    <select id="incidentType" required>
+                        <option value="">Select incident type</option>
+                        <option value="Planned Maintenance">Planned Maintenance</option>
+                        <option value="Service Interruption">Service Interruption</option>
+                        <option value="Network Outage">Network Outage</option>
+                        <option value="Service Restoration">Service Restoration</option>
+                        <option value="General Notice">General Notice</option>
+                        <option value="Emergency Maintenance">Emergency Maintenance</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="incidentStatus">Status *</label>
+                    <select id="incidentStatus" required>
+                        <option value="">Select status</option>
+                        <option value="Scheduled">Scheduled</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Investigating">Investigating</option>
+                        <option value="Resolved">Resolved</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="title">Announcement Title *</label>
+                    <input type="text" id="title" placeholder="e.g., Network Maintenance - Area X" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="affectedAreas">Affected Areas *</label>
+                    <input type="text" id="affectedAreas" placeholder="e.g., Johannesburg, Sandton, Midrand" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="startDate">Start Date *</label>
+                        <input type="date" id="startDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="startTime">Start Time *</label>
+                        <input type="time" id="startTime" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="endDate">End Date (if known)</label>
+                        <input type="date" id="endDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="endTime">End Time (if known)</label>
+                        <input type="time" id="endTime">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description *</label>
+                    <textarea id="description" rows="4" placeholder="Detailed description of the incident..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="impact">Expected Impact</label>
+                    <textarea id="impact" rows="2" placeholder="What services will be affected?"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="updates">Updates/Comments</label>
+                    <textarea id="updates" rows="3" placeholder="Latest update or status information for customers..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="contactInfo">Contact Information</label>
+                    <input type="text" id="contactInfo" value="WhatsApp: +27 84 555 5585" placeholder="Contact details for queries">
+                </div>
+
+                <div class="form-group">
+                    <label for="reference">Reference Number</label>
+                    <input type="text" id="reference" placeholder="INC-2026-001">
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">Generate Announcement</button>
+                    <button type="button" id="resetBtn" class="btn btn-secondary">Reset Form</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="previewSection" class="preview-section hidden">
+            <h3>Preview</h3>
+            <div id="canvasContainer">
+                <canvas id="announcementCanvas"></canvas>
+            </div>
+            
+            <div class="download-buttons">
+                <button id="downloadImage" class="btn btn-success">Download as Image (PNG)</button>
+                <button id="downloadPDF" class="btn btn-success">Download as PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
