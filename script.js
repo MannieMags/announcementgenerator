@@ -117,7 +117,10 @@ function loadBrandLogosFromCache() {
                 console.log(brand + ' logo loaded from server');
                 updateLogoSetupUI();
             };
-            brandLogos[brand].src = filename;
+            brandLogos[brand].onerror = function() {
+                console.warn(brand + ' logo failed: ' + filename);
+            };
+            brandLogos[brand].src = filename + '?v=1';
         } else {
             // On file:// — use localStorage base64 cache to avoid canvas taint
             const cached = localStorage.getItem('brandLogo_' + brand);
