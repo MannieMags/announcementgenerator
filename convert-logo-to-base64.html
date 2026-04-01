@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convert Logo to Base64</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .step {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 8px;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        button {
+            background: #005EB8;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #004a8f;
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+        img {
+            max-width: 300px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Convert SADV Logo to Base64</h1>
+    <p>This tool will convert your SADVLOGO.png to base64 format so it can be embedded directly in the JavaScript, preventing download errors.</p>
+
+    <div class="step">
+        <h3>Step 1: Select your logo file</h3>
+        <input type="file" id="logoFile" accept="image/*">
+    </div>
+
+    <div class="step">
+        <h3>Step 2: Preview</h3>
+        <img id="preview" style="display:none;">
+        <p id="previewText">No image selected</p>
+    </div>
+
+    <div class="step">
+        <h3>Step 3: Base64 Code</h3>
+        <textarea id="base64Output" readonly placeholder="Base64 code will appear here..."></textarea>
+        <br><br>
+        <button id="copyBtn" style="display:none;">Copy to Clipboard</button>
+        <span id="copyStatus" class="success" style="display:none;">Copied!</span>
+    </div>
+
+    <div class="step">
+        <h3>Step 4: Update script.js</h3>
+        <p>After copying the base64 code:</p>
+        <ol>
+            <li>Open <strong>script.js</strong> in a text editor</li>
+            <li>Find the line: <code>defaultLogo.src = 'SADVLOGO.png';</code> (around line 41)</li>
+            <li>Replace it with: <code>defaultLogo.src = 'YOUR_BASE64_CODE_HERE';</code></li>
+            <li>Paste the copied base64 code in place of YOUR_BASE64_CODE_HERE</li>
+            <li>Save the file and refresh your browser</li>
+        </ol>
+    </div>
+
+    <script>
+        const logoFile = document.getElementById('logoFile');
+        const preview = document.getElementById('preview');
+        const previewText = document.getElementById('previewText');
+        const base64Output = document.getElementById('base64Output');
+        const copyBtn = document.getElementById('copyBtn');
+        const copyStatus = document.getElementById('copyStatus');
+
+        logoFile.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                
+                reader.onload = function(event) {
+                    const base64String = event.target.result;
+                    
+                    // Show preview
+                    preview.src = base64String;
+                    preview.style.display = 'block';
+                    previewText.style.display = 'none';
+                    
+                    // Show base64 code
+                    base64Output.value = base64String;
+                    copyBtn.style.display = 'inline-block';
+                };
+                
+                reader.readAsDataURL(file);
+            }
+        });
+
+        copyBtn.addEventListener('click', function() {
+            base64Output.select();
+            document.execCommand('copy');
+            copyStatus.style.display = 'inline';
+            
+            setTimeout(() => {
+                copyStatus.style.display = 'none';
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

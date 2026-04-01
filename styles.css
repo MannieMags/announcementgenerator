@@ -1,253 +1,371 @@
-/* SADV Brand Colors - Based on website branding */
+/* ============================================================================
+   SADV & INFINIFI ANNOUNCEMENT GENERATOR - STYLESHEET
+   ============================================================================
+   
+   PURPOSE:
+       Modern responsive styling for multi-brand announcement generator interface.
+       Provides professional look with gradient backgrounds, smooth transitions,
+       and mobile-optimized layouts.
+   
+   DESIGN SYSTEM:
+       - Color scheme: SADV blue gradient (#00A3E0 to #0066CC)
+       - Typography: Segoe UI (modern sans-serif)
+       - Layout: Centered single-column with max-width 1200px
+       - Effects: Backdrop blur, box shadows, hover animations
+   
+   RESPONSIVE BREAKPOINTS:
+       - Desktop: > 768px (2-column form layout)
+       - Mobile: <= 768px (single-column stacked layout)
+   
+   KEY FEATURES:
+       - CSS custom properties (variables) for easy theming
+       - Flexbox and Grid for modern layouts
+       - Smooth transitions on interactive elements
+       - Loading animation for async operations
+   
+   BRAND COLORS DEFINED:
+       - Primary: #00A3E0 (Bright blue - main brand color)
+       - Secondary: #0066CC (Deep blue - gradient end)
+       - Accent: #FF6B35 (Orange - highlights and CTAs)
+       - Success: #00C853 (Green - positive actions)
+       - Warning: #FFB300 (Yellow - cautions)
+       - Danger: #E53935 (Red - errors)
+   
+   CREATED: March 2026
+   LAST MODIFIED: March 22, 2026
+   ============================================================================
+*/
+
+/* ===== CSS CUSTOM PROPERTIES (VARIABLES) ===== */
+/* Centralized color system for consistent branding throughout the app */
+/* Using :root makes these variables available globally */
 :root {
-    --sadv-primary: #00A3E0; /* Bright blue */
-    --sadv-secondary: #0066CC; /* Deep blue */
-    --sadv-accent: #FF6B35; /* Orange accent */
-    --sadv-dark: #1A1A2E;
-    --sadv-light: #F5F5F5;
-    --sadv-success: #00C853;
-    --sadv-warning: #FFB300;
-    --sadv-danger: #E53935;
-    --sadv-text: #333333;
+    /* Primary brand colors - SADV blue palette */
+    --sadv-primary: #00A3E0;        /* Bright blue - main brand color, buttons, links */
+    --sadv-secondary: #0066CC;      /* Deep blue - gradient backgrounds, headers */
+    --sadv-accent: #FF6B35;         /* Orange - accent highlights, hover states */
+    
+    /* Neutral colors - text and backgrounds */
+    --sadv-dark: #1A1A2E;           /* Near-black - main text, headings */
+    --sadv-light: #F5F5F5;          /* Off-white - subtle backgrounds */
+    
+    /* Status colors - feedback indicators */
+    --sadv-success: #00C853;        /* Green - success states, positive actions */
+    --sadv-warning: #FFB300;        /* Yellow - warnings, attention needed */
+    --sadv-danger: #E53935;         /* Red - errors, critical issues */
+    
+    /* Text color */
+    --sadv-text: #333333;           /* Dark gray - body text for readability */
 }
 
+/* ===== GLOBAL RESET ===== */
+/* Remove default browser styling for consistent cross-browser appearance */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+    margin: 0;                      /* Remove default margins */
+    padding: 0;                     /* Remove default padding */
+    box-sizing: border-box;         /* Include padding/border in element width/height */
 }
 
+/* ===== BODY STYLING ===== */
+/* Full-page gradient background with modern styling */
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, var(--sadv-primary) 0%, var(--sadv-secondary) 100%);
-    min-height: 100vh;
-    padding: 20px;
-    color: var(--sadv-text);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;  /* Modern, readable font stack */
+    background: linear-gradient(135deg, var(--sadv-primary) 0%, var(--sadv-secondary) 100%);  /* Diagonal gradient from bright to deep blue */
+    min-height: 100vh;              /* Full viewport height minimum */
+    padding: 20px;                  /* Spacing around edges */
+    color: var(--sadv-text);        /* Default text color */
 }
 
+/* ===== MAIN CONTAINER ===== */
+/* Centers content with maximum width for optimal readability */
 .container {
-    max-width: 1200px;
-    margin: 0 auto;
+    max-width: 1200px;              /* Limit width on large screens */
+    margin: 0 auto;                 /* Center horizontally */
 }
 
+/* ===== PAGE HEADER ===== */
+/* Title banner with glass morphism effect */
 header {
-    text-align: center;
-    color: white;
-    margin-bottom: 30px;
-    padding: 20px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 15px;
-    backdrop-filter: blur(10px);
+    text-align: center;             /* Center all text */
+    color: white;                   /* White text for contrast against blue background */
+    margin-bottom: 30px;            /* Space before form */
+    padding: 20px;                  /* Internal spacing */
+    background: rgba(255, 255, 255, 0.1);  /* Semi-transparent white for glass effect */
+    border-radius: 15px;            /* Rounded corners */
+    backdrop-filter: blur(10px);    /* Blur background behind header for depth */
 }
 
+/* Main heading styling */
 header h1 {
-    font-size: 2.5em;
-    margin-bottom: 10px;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    font-size: 2.5em;               /* Large, prominent title */
+    margin-bottom: 10px;            /* Space before subtitle */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);  /* Subtle shadow for depth */
 }
 
+/* Subtitle styling */
 header h2 {
-    font-size: 1.5em;
-    font-weight: 300;
-    opacity: 0.9;
+    font-size: 1.5em;               /* Smaller than main heading */
+    font-weight: 300;               /* Light weight for contrast */
+    opacity: 0.9;                   /* Slightly transparent */
 }
 
+/* ===== FORM CONTAINER ===== */
+/* White card that contains all form inputs */
 .form-container {
-    background: white;
-    padding: 40px;
-    border-radius: 15px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-    margin-bottom: 30px;
+    background: white;              /* Solid white background for contrast */
+    padding: 40px;                  /* Generous internal spacing */
+    border-radius: 15px;            /* Rounded corners matching header */
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);  /* Large shadow for elevation */
+    margin-bottom: 30px;            /* Space before preview section */
 }
 
+/* ===== FORM ELEMENTS ===== */
+
+/* Individual form field container */
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 20px;            /* Space between form fields */
 }
 
+/* Two-column layout for date/time pairs */
+/* Uses CSS Grid for equal-width columns with gap */
 .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    display: grid;                  /* Grid layout */
+    grid-template-columns: 1fr 1fr; /* Two equal columns */
+    gap: 20px;                      /* Space between columns */
 }
 
+/* Form labels */
 label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-    color: var(--sadv-dark);
+    display: block;                 /* Full width, new line */
+    margin-bottom: 8px;             /* Space before input */
+    font-weight: 600;               /* Semi-bold for emphasis */
+    color: var(--sadv-dark);        /* Dark text for readability */
 }
 
+/* ===== INPUT STYLING ===== */
+/* Consistent styling for all text inputs, selects, and textareas */
 input[type="text"],
 input[type="date"],
 input[type="time"],
 select,
 textarea {
-    width: 100%;
-    padding: 12px;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-    font-size: 14px;
-    transition: all 0.3s ease;
-    font-family: inherit;
+    width: 100%;                    /* Full width of container */
+    padding: 12px;                  /* Internal spacing for comfort */
+    border: 2px solid #e0e0e0;      /* Light gray border */
+    border-radius: 8px;             /* Rounded corners */
+    font-size: 14px;                /* Readable text size */
+    transition: all 0.3s ease;      /* Smooth animation on state changes */
+    font-family: inherit;           /* Use same font as body */
 }
 
+/* Focus state for inputs - when user clicks/tabs into field */
+/* Highlights active field with blue border and glow */
 input[type="text"]:focus,
 input[type="date"]:focus,
 input[type="time"]:focus,
 select:focus,
 textarea:focus {
-    outline: none;
-    border-color: var(--sadv-primary);
-    box-shadow: 0 0 0 3px rgba(0, 163, 224, 0.1);
+    outline: none;                  /* Remove default browser outline */
+    border-color: var(--sadv-primary);  /* Blue border when active */
+    box-shadow: 0 0 0 3px rgba(0, 163, 224, 0.1);  /* Subtle blue glow */
 }
 
+/* Dropdown specific styling */
 select {
-    cursor: pointer;
+    cursor: pointer;                /* Show pointer cursor on hover */
 }
 
+/* Textarea specific styling */
 textarea {
-    resize: vertical;
+    resize: vertical;               /* Allow vertical resize only (not horizontal) */
 }
 
+/* ===== BUTTON CONTAINER ===== */
+/* Flexbox container for side-by-side buttons */
 .button-group {
-    display: flex;
-    gap: 15px;
-    margin-top: 30px;
+    display: flex;                  /* Flexbox for horizontal layout */
+    gap: 15px;                      /* Space between buttons */
+    margin-top: 30px;               /* Extra space above buttons */
 }
 
+/* ===== BUTTON BASE STYLING ===== */
+/* Shared styles for all buttons */
 .btn {
-    padding: 14px 30px;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    padding: 14px 30px;             /* Generous click area */
+    border: none;                   /* Remove default button border */
+    border-radius: 8px;             /* Rounded corners */
+    font-size: 16px;                /* Large, readable text */
+    font-weight: 600;               /* Semi-bold for emphasis */
+    cursor: pointer;                /* Pointer cursor on hover */
+    transition: all 0.3s ease;      /* Smooth animations */
+    text-transform: uppercase;      /* ALL CAPS for impact */
+    letter-spacing: 0.5px;          /* Slight spacing for readability */
 }
 
+/* ===== PRIMARY BUTTON ===== */
+/* Main action button (Generate Announcement) */
 .btn-primary {
-    background: linear-gradient(135deg, var(--sadv-primary), var(--sadv-secondary));
-    color: white;
-    flex: 1;
+    background: linear-gradient(135deg, var(--sadv-primary), var(--sadv-secondary));  /* Blue gradient */
+    color: white;                   /* White text for contrast */
+    flex: 1;                        /* Take available space in flex container */
 }
 
+/* Primary button hover effect */
 .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 163, 224, 0.4);
+    transform: translateY(-2px);    /* Lift up slightly */
+    box-shadow: 0 5px 15px rgba(0, 163, 224, 0.4);  /* Add shadow for depth */
 }
 
+/* ===== SECONDARY BUTTON ===== */
+/* Secondary action button (Reset) */
 .btn-secondary {
-    background: #757575;
-    color: white;
+    background: #757575;            /* Gray background */
+    color: white;                   /* White text */
 }
 
+/* Secondary button hover effect */
 .btn-secondary:hover {
-    background: #616161;
+    background: #616161;            /* Darker gray on hover */
 }
 
+/* ===== SUCCESS BUTTON ===== */
+/* Positive action buttons (Download Image/PDF) */
 .btn-success {
-    background: var(--sadv-success);
-    color: white;
-    flex: 1;
+    background: var(--sadv-success);  /* Green background */
+    color: white;                   /* White text */
+    flex: 1;                        /* Equal width in flex container */
 }
 
+/* Success button hover effect */
 .btn-success:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 200, 83, 0.4);
+    transform: translateY(-2px);    /* Lift effect */
+    box-shadow: 0 5px 15px rgba(0, 200, 83, 0.4);  /* Green glow */
 }
 
+/* ===== PREVIEW SECTION ===== */
+/* Container for generated announcement preview and download buttons */
+/* Hidden by default, shown after form submission */
 .preview-section {
-    background: white;
-    padding: 40px;
-    border-radius: 15px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    background: white;              /* White background matching form */
+    padding: 40px;                  /* Generous spacing */
+    border-radius: 15px;            /* Rounded corners */
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);  /* Elevated appearance */
 }
 
+/* Hide preview section when .hidden class is applied */
 .preview-section.hidden {
-    display: none;
+    display: none;                  /* Completely hidden (no space taken) */
 }
 
+/* Preview section heading */
 .preview-section h3 {
-    color: var(--sadv-dark);
-    margin-bottom: 20px;
-    font-size: 1.8em;
-    text-align: center;
+    color: var(--sadv-dark);        /* Dark text */
+    margin-bottom: 20px;            /* Space before canvas */
+    font-size: 1.8em;               /* Large heading */
+    text-align: center;             /* Centered text */
 }
 
+/* ===== CANVAS CONTAINER ===== */
+/* Wrapper for HTML5 canvas element */
 #canvasContainer {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 30px;
-    padding: 30px;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    display: flex;                  /* Flexbox for centering */
+    justify-content: center;        /* Center horizontally */
+    margin-bottom: 30px;            /* Space before download buttons */
+    padding: 30px;                  /* Internal spacing */
+    background: white;              /* White background */
+    border-radius: 10px;            /* Rounded corners */
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);  /* Subtle shadow */
 }
 
+/* Canvas element itself */
+/* Contains the drawn 1080x1080px announcement image */
 #announcementCanvas {
-    max-width: 100%;
-    height: auto;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
-    border-radius: 8px;
+    max-width: 100%;                /* Responsive: never exceed container width */
+    height: auto;                   /* Maintain aspect ratio */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);  /* Shadow for depth */
+    border-radius: 8px;             /* Slightly rounded corners */
 }
 
+/* ===== DOWNLOAD BUTTONS ===== */
+/* Container for PNG and PDF download buttons */
 .download-buttons {
-    display: flex;
-    gap: 15px;
+    display: flex;                  /* Side-by-side layout */
+    gap: 15px;                      /* Space between buttons */
 }
 
-/* Responsive Design */
+/* ============================================================================
+   RESPONSIVE DESIGN - MOBILE OPTIMIZATION
+   ============================================================================
+   Media query for screens 768px and smaller (tablets and phones)
+   Adapts layout for smaller screens by stacking elements vertically
+   ============================================================================
+*/
 @media (max-width: 768px) {
+    /* Smaller header text on mobile */
     header h1 {
-        font-size: 1.8em;
+        font-size: 1.8em;           /* Reduced from 2.5em */
     }
 
     header h2 {
-        font-size: 1.2em;
+        font-size: 1.2em;           /* Reduced from 1.5em */
     }
 
+    /* Reduced padding on mobile to maximize screen space */
     .form-container,
     .preview-section {
-        padding: 20px;
+        padding: 20px;              /* Half of desktop padding */
     }
 
+    /* Stack date/time fields vertically on mobile */
+    /* Changes from 2-column to single-column layout */
     .form-row {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr; /* Single column instead of 1fr 1fr */
     }
 
+    /* Stack buttons vertically on mobile */
+    /* More finger-friendly than side-by-side */
     .button-group,
     .download-buttons {
-        flex-direction: column;
+        flex-direction: column;     /* Stack vertically instead of horizontally */
     }
 
+    /* Full-width buttons on mobile for easier tapping */
     .btn {
-        width: 100%;
+        width: 100%;                /* Full width of container */
     }
 }
 
-/* Loading Animation */
+/* ============================================================================
+   LOADING ANIMATION
+   ============================================================================
+   Visual feedback during async operations (form submission, file generation)
+   Shows spinning spinner overlay on buttons/containers
+   ============================================================================
+*/
+
+/* Keyframe animation for spinning motion */
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% { transform: rotate(0deg); }      /* Start position */
+    100% { transform: rotate(360deg); }  /* Full rotation */
 }
 
+/* Loading state applied to elements during processing */
 .loading {
-    pointer-events: none;
-    opacity: 0.6;
+    pointer-events: none;           /* Disable clicks during loading */
+    opacity: 0.6;                   /* Fade out to indicate disabled state */
 }
 
+/* Spinning loader icon displayed after element when .loading class applied */
 .loading::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 20px;
-    height: 20px;
-    margin: -10px 0 0 -10px;
-    border: 3px solid #f3f3f3;
-    border-top: 3px solid var(--sadv-primary);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
+    content: "";                    /* Empty content for pseudo-element */
+    position: absolute;             /* Position relative to parent */
+    top: 50%;                       /* Center vertically */
+    left: 50%;                      /* Center horizontally */
+    width: 20px;                    /* Spinner size */
+    height: 20px;                   /* Spinner size */
+    margin: -10px 0 0 -10px;        /* Offset to truly center (half of width/height) */
+    border: 3px solid #f3f3f3;      /* Light gray border */
+    border-top: 3px solid var(--sadv-primary);  /* Blue top border creates spinner effect */
+    border-radius: 50%;             /* Perfect circle */
+    animation: spin 1s linear infinite;  /* Continuous spinning animation */
 }

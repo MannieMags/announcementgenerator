@@ -1,26 +1,120 @@
+<!--
+============================================================================
+SADV & INFINIFI ANNOUNCEMENT GENERATOR
+============================================================================
+Multi-Brand Customer Communication Tool
+
+PURPOSE:
+    Generate professional service announcement graphics for SADV and Infinifi
+    internet service providers. Creates Instagram-ready square images (1080x1080)
+    and A4 PDF documents for customer notifications.
+
+OUTPUT FORMATS:
+    - PNG Image: 1080x1080px (Instagram square format)
+    - PDF: A4 portrait with centered image
+
+FEATURES:
+    - Dual brand support (SADV and Infinifi)
+    - Two templates: Regular (detailed) and Restoration ("GOOD NEWS")
+    - Custom logo upload support
+    - Dynamic color schemes per brand
+    - Auto-populated date/time defaults
+    - Responsive web form interface
+
+DEPENDENCIES:
+    - styles.css: UI styling and responsive layout
+    - script.js: Canvas rendering and business logic
+    - jsPDF 2.5.1: PDF export functionality (loaded via CDN)
+
+BRANDS SUPPORTED:
+    1. SADV: Blue/Yellow/Pink color scheme
+    2. Infinifi: Orange/Deep Blue/Light Blue color scheme
+
+CREATED: March 2026
+LAST MODIFIED: March 22, 2026
+============================================================================
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Character encoding: UTF-8 for international character support -->
     <meta charset="UTF-8">
+    
+    <!-- Responsive viewport settings for mobile devices -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SADV Announcement Generator</title>
+    
+    <!-- Page title shown in browser tab -->
+    <title>Announcement Generator - SADV & Infinifi</title>
+    
+    <!-- External stylesheet for UI styling -->
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Main container for centered layout -->
     <div class="container">
+        
+        <!-- ===== PAGE HEADER ===== -->
+        <!-- Title banner with gradient background -->
         <header>
-            <h1>SADV Customer Care</h1>
-            <h2>Announcement Generator</h2>
+            <h1>Customer Care Announcement Generator</h1>
+            <h2>SADV & Infinifi</h2>
         </header>
 
+        <!-- ===== LOGO SETUP BANNER ===== -->
+        <!-- Shown on first run until both brand logos are cached in localStorage -->
+        <div id="logoSetupBanner" style="display:none; background:#FFF8E1; border:2px solid #FFC107; border-radius:12px; padding:18px 22px; margin-bottom:20px;">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+                <span style="font-size:22px;">⚠️</span>
+                <strong style="font-size:16px; color:#7B5800;">One-time Logo Setup Required for Downloads</strong>
+            </div>
+            <p style="margin:0 0 14px; color:#555; font-size:14px;">Select each brand's logo file from your folder. This is done once — logos will be saved automatically and downloads will work every time.</p>
+            <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:200px;">
+                    <label style="display:block; font-weight:bold; color:#333; margin-bottom:6px; font-size:13px;">SADV Logo (SADVLOGO.png)</label>
+                    <input type="file" id="sadvLogoSetup" accept="image/*" style="font-size:13px; width:100%;">
+                    <span id="sadvLogoStatus" style="font-size:12px; margin-top:4px; display:block; color:#888;">⚠️ Not loaded</span>
+                </div>
+                <div style="flex:1; min-width:200px;">
+                    <label style="display:block; font-weight:bold; color:#333; margin-bottom:6px; font-size:13px;">Infinifi Logo (INFINIFILOGO.png)</label>
+                    <input type="file" id="infinifiLogoSetup" accept="image/*" style="font-size:13px; width:100%;">
+                    <span id="infinifiLogoStatus" style="font-size:12px; margin-top:4px; display:block; color:#888;">⚠️ Not loaded</span>
+                </div>
+            </div>
+            <p style="margin:12px 0 0; font-size:12px; color:#888;">✅ Once both are loaded the banner disappears and logos will appear on every download going forward.</p>
+        </div>
+
+        <!-- ===== FORM CONTAINER ===== -->
+        <!-- White card containing all input fields for announcement generation -->
         <div class="form-container">
+            <!-- Main form - submits to JavaScript, not a server -->
+            <!-- On submit: Collects all data and generates canvas image -->
             <form id="announcementForm">
+                
+                <!-- === BRAND SELECTION === -->
+                <!-- Determines colors, logo, contact info for entire announcement -->
+                <!-- Required field - must select before generating -->
+                <div class="form-group">
+                    <label for="brandSelect">Select Brand *</label>
+                    <select id="brandSelect" required>
+                        <option value="sadv">SADV</option>
+                        <option value="infinifi">Infinifi</option>
+                    </select>
+                    <small style="color: #666; display: block; margin-top: 5px;">Choose which brand this announcement is for</small>
+                </div>
+
+                <!-- === CUSTOM LOGO UPLOAD === -->
+                <!-- Optional: Overrides default brand logos (SADVLOGO.png / InfinifiLOGO.png) -->
+                <!-- Accepts any image format, script will scale and center it -->
                 <div class="form-group">
                     <label for="logoUpload">Company Logo (Optional)</label>
                     <input type="file" id="logoUpload" accept="image/*">
-                    <small style="color: #666; display: block; margin-top: 5px;">Upload your logo to replace the SADV text in the header</small>
+                    <small style="color: #666; display: block; margin-top: 5px;">Upload your logo to replace the brand text in the header</small>
                 </div>
 
+                <!-- === INCIDENT TYPE === -->
+                <!-- Categorizes the announcement type for proper messaging -->
+                <!-- Used in: title display, icon selection, filename generation -->
+                <!-- Required field -->
                 <div class="form-group">
                     <label for="incidentType">Incident Type *</label>
                     <select id="incidentType" required>
@@ -34,6 +128,10 @@
                     </select>
                 </div>
 
+                <!-- === INCIDENT STATUS === -->
+                <!-- Current state of the incident -->
+                <!-- Determines status badge color: Scheduled/Resolved=Green, In Progress=Yellow, Investigating=Red -->
+                <!-- Required field -->
                 <div class="form-group">
                     <label for="incidentStatus">Status *</label>
                     <select id="incidentStatus" required>
@@ -45,16 +143,43 @@
                     </select>
                 </div>
 
+                <!-- === TEMPLATE SELECTION === -->
+                <!-- Checkbox to switch between Regular and Restoration templates -->
+                <!-- Regular: Detailed info box with full incident details -->
+                <!-- Restoration: Simplified "GOOD NEWS" design with diagonal blue section -->
+                <!-- WARNING: Only use restoration template when service is actually restored! -->
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="useRestorationTemplate" style="width: auto; cursor: pointer;">
+                        <span style="font-weight: bold; color: #10B981;">✓ Use Restoration Template (ONLY for when service has been RESTORED/FIXED - shows "GOOD NEWS" banner)</span>
+                    </label>
+                    <small style="color: #666; display: block; margin-top: 5px; margin-left: 30px;">
+                        ⚠️ Do NOT use this for outages or ongoing issues. Use regular template for fiber breaks, maintenance, or problems.
+                    </small>
+                </div>
+
+                <!-- === ANNOUNCEMENT TITLE === -->
+                <!-- Main heading displayed prominently on announcement -->
+                <!-- Supports multi-line text wrapping if too long -->
+                <!-- Required field -->
                 <div class="form-group">
                     <label for="title">Announcement Title *</label>
                     <input type="text" id="title" placeholder="e.g., Network Maintenance - Area X" required>
                 </div>
 
+                <!-- === AFFECTED AREAS === -->
+                <!-- Geographic locations impacted by the incident -->
+                <!-- Displayed in location section and incident details box -->
+                <!-- Required field -->
                 <div class="form-group">
                     <label for="affectedAreas">Affected Areas *</label>
                     <input type="text" id="affectedAreas" placeholder="e.g., Johannesburg, Sandton, Midrand" required>
                 </div>
 
+                <!-- === START DATE/TIME === -->
+                <!-- When the incident begins or began -->
+                <!-- Auto-populated with current date/time on page load -->
+                <!-- Both fields required -->
                 <div class="form-row">
                     <div class="form-group">
                         <label for="startDate">Start Date *</label>
@@ -66,6 +191,11 @@
                     </div>
                 </div>
 
+                <!-- === END DATE/TIME === -->
+                <!-- When service is expected to be restored -->
+                <!-- Auto-populated with current time + 4 hours (typical maintenance window) -->
+                <!-- Optional fields - can be left blank if unknown -->
+                <!-- Script calculates duration if both start and end provided -->
                 <div class="form-row">
                     <div class="form-group">
                         <label for="endDate">End Date (if known)</label>
@@ -77,31 +207,57 @@
                     </div>
                 </div>
 
+                <!-- === INCIDENT DESCRIPTION === -->
+                <!-- Detailed explanation of the incident/maintenance -->
+                <!-- Displayed as "Reason:" or "Cause:" in incident details box -->
+                <!-- Supports long text with automatic wrapping -->
+                <!-- Required field -->
                 <div class="form-group">
                     <label for="description">Description *</label>
                     <textarea id="description" rows="4" placeholder="Detailed description of the incident..." required></textarea>
                 </div>
 
+                <!-- === IMPACT DESCRIPTION === -->
+                <!-- Explains what services/features will be unavailable -->
+                <!-- Optional field - shown in incident details box if provided -->
+                <!-- Helps customers understand scope of disruption -->
                 <div class="form-group">
                     <label for="impact">Expected Impact</label>
                     <textarea id="impact" rows="2" placeholder="What services will be affected?"></textarea>
                 </div>
 
+                <!-- === UPDATES/COMMENTS === -->
+                <!-- Latest status update or progress information -->
+                <!-- Optional field - shows as "Latest Update" section with megaphone icon if provided -->
+                <!-- Useful for progress updates or additional context -->
                 <div class="form-group">
                     <label for="updates">Updates/Comments</label>
                     <textarea id="updates" rows="3" placeholder="Latest update or status information for customers..."></textarea>
                 </div>
 
+                <!-- === CONTACT INFORMATION === -->
+                <!-- Support contact details for customer queries -->
+                <!-- Auto-populated based on selected brand (SADV/Infinifi WhatsApp numbers) -->
+                <!-- Updates automatically when brand selection changes -->
+                <!-- Displayed in "Need Assistance?" section -->
                 <div class="form-group">
                     <label for="contactInfo">Contact Information</label>
                     <input type="text" id="contactInfo" value="WhatsApp: +27 84 555 5585" placeholder="Contact details for queries">
                 </div>
 
+                <!-- === REFERENCE NUMBER === -->
+                <!-- Incident/ticket tracking number -->
+                <!-- Optional field - displayed below signature if provided -->
+                <!-- Useful for internal tracking and customer service queries -->
+                <!-- Format examples: INC-2026-001, TKT-12345, REF-SADV-001 -->
                 <div class="form-group">
                     <label for="reference">Reference Number</label>
                     <input type="text" id="reference" placeholder="INC-2026-001">
                 </div>
 
+                <!-- === ACTION BUTTONS === -->
+                <!-- Submit: Collects form data and generates announcement on canvas -->
+                <!-- Reset: Clears all fields and reloads page defaults -->
                 <div class="button-group">
                     <button type="submit" class="btn btn-primary">Generate Announcement</button>
                     <button type="button" id="resetBtn" class="btn btn-secondary">Reset Form</button>
@@ -109,12 +265,23 @@
             </form>
         </div>
 
+        <!-- ===== PREVIEW SECTION ===== -->
+        <!-- Hidden by default - shown after form submission -->
+        <!-- Displays generated announcement and download options -->
         <div id="previewSection" class="preview-section hidden">
             <h3>Preview</h3>
+            
+            <!-- Canvas container - holds the 1080x1080px announcement image -->
             <div id="canvasContainer">
+                <!-- HTML5 Canvas element where announcement is drawn -->
+                <!-- Populated by script.js drawAnnouncement() or drawRestorationAnnouncement() -->
+                <!-- Size: 1080x1080px (Instagram square format) -->
                 <canvas id="announcementCanvas"></canvas>
             </div>
             
+            <!-- === DOWNLOAD BUTTONS === -->
+            <!-- PNG: Direct image export at 1080x1080px -->
+            <!-- PDF: A4 portrait with centered image and 10mm margins -->
             <div class="download-buttons">
                 <button id="downloadImage" class="btn btn-success">Download as Image (PNG)</button>
                 <button id="downloadPDF" class="btn btn-success">Download as PDF</button>
@@ -122,7 +289,14 @@
         </div>
     </div>
 
+    <!-- ===== EXTERNAL SCRIPTS ===== -->
+    
+    <!-- jsPDF Library v2.5.1 - For PDF export functionality -->
+    <!-- CDN hosted for reliability and automatic updates -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- Main application logic -->
+    <!-- Handles: Form submission, canvas drawing, brand management, downloads -->
     <script src="script.js"></script>
 </body>
 </html>

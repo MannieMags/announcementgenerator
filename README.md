@@ -1,6 +1,6 @@
-# SADV Announcement Generator
+# SADV & Infinifi Announcement Generator
 
-A free, browser-based announcement generator for SADV Customer Care team to create professional incident announcements with company branding. Generate both images (PNG) and PDFs with no installation or server required.
+A free, browser-based announcement generator for SADV and Infinifi Customer Care teams to create professional incident announcements with company branding. Generate both images (PNG) and PDFs with no installation or server required.
 
 ## Features
 
@@ -9,9 +9,10 @@ A free, browser-based announcement generator for SADV Customer Care team to crea
 - Pre-filled incident types
 - Auto-populated date/time fields
 
-🎨 **Professional Branding**
-- SADV official colors (Blue gradient)
-- Company logo and tagline
+🎨 **Multi-Brand Support**
+- SADV official colors (Blue #005EB8, Yellow #FFC107, Pink #E91E63)
+- Infinifi official colors (Orange #FF6B35, Deep Blue #004E89, Light Blue #00A8E8)
+- Automatic logo and contact info switching
 - Professional layout and design
 
 📢 **Incident Types Supported**
@@ -23,7 +24,7 @@ A free, browser-based announcement generator for SADV Customer Care team to crea
 - Emergency Maintenance
 
 📥 **Download Options**
-- PNG Image (high resolution - 1200x1600px)
+- PNG Image (high resolution - 1080x1080px, perfect for Instagram)
 - PDF Document (A4 format)
 
 💰 **Completely Free**
@@ -41,7 +42,11 @@ A free, browser-based announcement generator for SADV Customer Care team to crea
    - Simply open `index.html` in any modern web browser
    - Or host it on any free static hosting (GitHub Pages, Netlify, Vercel, etc.)
 
-2. **Fill in the incident details**
+2. **Select your brand**
+   - Choose between SADV or Infinifi from the brand dropdown
+   - Contact information will automatically update
+
+3. **Fill in the incident details**
    - Select the incident type
    - Enter announcement title
    - Specify affected areas
