@@ -106,21 +106,43 @@ function saveBrandLogo(brand, file) {
  * If a logo isn't cached yet the setup banner will prompt the user to pick the file.
  */
 function loadBrandLogosFromCache() {
+    const isServer = window.location.protocol === 'http:' || window.location.protocol === 'https:';
+
     ['sadv', 'infinifi'].forEach(function(brand) {
-        const cached = localStorage.getItem('brandLogo_' + brand);
-        if (cached) {
-            brandLogos[brand].src = cached;
-            console.log(brand + ' logo loaded from cache');
+        const filename = brand === 'sadv' ? 'SADVLOGO.png' : 'INFINIFILOGO.png';
+
+        if (isServer) {
+            // On a live server the files are same-origin — load directly, no taint
+            brandLogos[brand].onload = function() {
+                console.log(brand + ' logo loaded from server');
+                updateLogoSetupUI();
+            };
+            brandLogos[brand].src = filename;
+        } else {
+            // On file:// — use localStorage base64 cache to avoid canvas taint
+            const cached = localStorage.getItem('brandLogo_' + brand);
+            if (cached) {
+                brandLogos[brand].src = cached;
+                console.log(brand + ' logo loaded from cache');
+            }
+            updateLogoSetupUI();
         }
     });
-    updateLogoSetupUI();
 }
 
-/** Update the setup banner visibility and status labels. */
 function updateLogoSetupUI() {
+    const isServer = window.location.protocol === 'http:' || window.location.protocol === 'https:';
+    const banner   = document.getElementById('logoSetupBanner');
+
+    if (isServer) {
+        // On a live server logos load automatically — hide the setup banner entirely
+        if (banner) banner.style.display = 'none';
+        return;
+    }
+
+    // On file:// — show banner until both logos are cached
     const sadvCached  = !!localStorage.getItem('brandLogo_sadv');
     const infCached   = !!localStorage.getItem('brandLogo_infinifi');
-    const banner      = document.getElementById('logoSetupBanner');
     const sadvStatus  = document.getElementById('sadvLogoStatus');
     const infStatus   = document.getElementById('infinifiLogoStatus');
     if (banner)     { banner.style.display = (!sadvCached || !infCached) ? 'block' : 'none'; }
