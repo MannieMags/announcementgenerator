@@ -2567,22 +2567,21 @@ function loadSelectedPangeaIncident() {
     }
 
     // --- END DATE/TIME ---
-    // Only populate end time when it is meaningful:
-    //   • Resolved/Restored/Closed  → end time = actual fix time
-    //   • Planned/Scheduled         → end time = known maintenance window end
-    // For active/investigating incidents we DON'T fill it — there is no confirmed
-    // end time yet and prefilling it would show wrong information to customers.
-    var statusForEnd = (inc.isp_event_status || inc.status || '').toLowerCase();
-    var isEnded    = statusForEnd.includes('resolv') || statusForEnd.includes('restor') || statusForEnd.includes('closed') || statusForEnd.includes('complet');
-    var isPlanned  = statusForEnd.includes('schedul') || statusForEnd.includes('planned') || statusForEnd.includes('future');
-    if (isEnded || isPlanned) {
+    // Only pre-fill end time for event types where the end time is known in advance:
+    //   • Planned Maintenance  → scheduled window with a defined end
+    //   • Change Request       → same, a controlled change with a known end
+    // For everything else (incidents, outages, emergency work) we leave it blank
+    // because there is no confirmed end time — filling it would mislead customers.
+    var rawType = (inc.event_type || '').toLowerCase();
+    var hasKnownEndTime = rawType.includes('planned') || rawType.includes('maintenance') || rawType.includes('change');
+    if (hasKnownEndTime) {
         var end = parsePangeaDatetime(inc.event_end_date);
         if (end) {
             document.getElementById('endDate').value = end.date;
             document.getElementById('endTime').value = end.time;
         }
     } else {
-        // Clear end fields — incident is still active, no confirmed end time
+        // Clear end fields — no confirmed end time for this event type
         document.getElementById('endDate').value = '';
         document.getElementById('endTime').value = '';
     }
