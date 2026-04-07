@@ -2223,6 +2223,8 @@ function fetchPangeaIncidents() {
         var list = [];
         if (Array.isArray(data)) {
             list = data;
+        } else if (data && data.events && Array.isArray(data.events.results)) {
+            list = data.events.results;
         } else if (data && Array.isArray(data.results)) {
             list = data.results;
         } else if (data && Array.isArray(data.events)) {
@@ -2354,12 +2356,13 @@ function loadSelectedPangeaIncident() {
     var titleType = inc.event_type ? inc.event_type.replace(/_/g, ' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); }) : 'Network Event';
     document.getElementById('title').value = titleType + (titleArea ? ' - ' + titleArea : '');
 
-    // Description
-    var desc = inc.details || inc.website_description || '';
+    // Description — nested under details.reason or top-level
+    var desc = (inc.details && inc.details.reason) || inc.details || inc.website_description || '';
     if (desc) document.getElementById('description').value = desc;
 
     // Impact
-    if (inc.impact) document.getElementById('impact').value = inc.impact;
+    var impact = (inc.details && inc.details.system_impact_category) || inc.impact || '';
+    if (impact) document.getElementById('impact').value = impact;
 
     // Start date/time
     var start = parsePangeaDatetime(inc.event_start_date);
