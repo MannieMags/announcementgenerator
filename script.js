@@ -2217,6 +2217,8 @@ function fetchPangeaIncidents() {
         return response.json();
     })
     .then(function(data) {
+        // Log raw response so we can diagnose shape issues
+        console.log('Pangea raw response:', JSON.stringify(data).slice(0, 800));
         // Handle various response shapes from the API
         var list = [];
         if (Array.isArray(data)) {
@@ -2228,13 +2230,14 @@ function fetchPangeaIncidents() {
         } else if (data && Array.isArray(data.data)) {
             list = data.data;
         } else if (data && typeof data === 'object') {
-            // Try to find the first array property in the response
             var keys = Object.keys(data);
             for (var i = 0; i < keys.length; i++) {
                 if (Array.isArray(data[keys[i]])) { list = data[keys[i]]; break; }
             }
-            // If still nothing, log so we can see the shape
-            if (list.length === 0) console.log('Pangea response shape:', JSON.stringify(data).slice(0, 500));
+        }
+        // Wrap single object in array
+        if (list.length === 0 && data && typeof data === 'object' && !Array.isArray(data) && data.id) {
+            list = [data];
         }
         pangeaIncidents = list;
         if (pangeaIncidents.length === 0) {
@@ -2258,6 +2261,10 @@ function fetchPangeaIncidents() {
 function populatePangeaDropdown(incidents) {
     const select = document.getElementById('pangeaIncidentSelect');
     select.innerHTML = '<option value="">-- Choose an incident --</option>';
+    if (!Array.isArray(incidents)) {
+        console.warn('populatePangeaDropdown: expected array, got', typeof incidents, incidents);
+        return;
+    }
     incidents.forEach(function(inc, idx) {
         const id    = inc.prefixed_id || inc.record_id || ('INC-' + idx);
         const type  = inc.event_type  || 'Event';
