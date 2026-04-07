@@ -2217,7 +2217,26 @@ function fetchPangeaIncidents() {
         return response.json();
     })
     .then(function(data) {
-        pangeaIncidents = Array.isArray(data) ? data : (data.results || data.events || []);
+        // Handle various response shapes from the API
+        var list = [];
+        if (Array.isArray(data)) {
+            list = data;
+        } else if (data && Array.isArray(data.results)) {
+            list = data.results;
+        } else if (data && Array.isArray(data.events)) {
+            list = data.events;
+        } else if (data && Array.isArray(data.data)) {
+            list = data.data;
+        } else if (data && typeof data === 'object') {
+            // Try to find the first array property in the response
+            var keys = Object.keys(data);
+            for (var i = 0; i < keys.length; i++) {
+                if (Array.isArray(data[keys[i]])) { list = data[keys[i]]; break; }
+            }
+            // If still nothing, log so we can see the shape
+            if (list.length === 0) console.log('Pangea response shape:', JSON.stringify(data).slice(0, 500));
+        }
+        pangeaIncidents = list;
         if (pangeaIncidents.length === 0) {
             statusEl.textContent = 'ℹ️ No incidents found for type: ' + type;
             statusEl.style.color = '#888';
