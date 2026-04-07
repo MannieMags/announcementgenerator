@@ -2189,7 +2189,8 @@ window.addEventListener('load', function() {
 // ============================================================================
 
 const PANGEA_API_BASE = 'https://pangea-staging.vumatel.co.za';
-const PANGEA_API_KEY  = 'rurGtn8X8Y4pFVYY5EucHZBMRo833Q68';
+// Key is injected via config.js (gitignored). Never hardcode here.
+const PANGEA_API_KEY  = (window.PANGEA_CONFIG && window.PANGEA_CONFIG.apiKey) ? window.PANGEA_CONFIG.apiKey : '';
 
 let pangeaIncidents = []; // cached list from last fetch
 

@@ -12,3 +12,6 @@ desktop.ini
 # Temporary files
 *.tmp
 *.log
+
+# API config — key lives here locally and is injected by CI for the live site
+config.js
