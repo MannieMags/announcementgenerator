@@ -22,21 +22,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v4
 
       - name: Inject API key into config.js
-        run: python3 -c "import os; open('config.js','w').write('window.PANGEA_CONFIG = { apiKey: \"' + os.environ['PANGEA_API_KEY'] + '\" };')"
         env:
           PANGEA_API_KEY: ${{ secrets.PANGEA_API_KEY }}
+        run: |
+          python3 - <<'PYEOF'
+          import os
+          key = os.environ.get('PANGEA_API_KEY', '')
+          with open('config.js', 'w') as f:
+              f.write('window.PANGEA_CONFIG = { apiKey: "' + key + '" };\n')
+          PYEOF
 
       - name: Setup Pages
-        uses: actions/configure-pages@v5.0.0
+        uses: actions/configure-pages@v5
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3.0.1
+        uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4.0.5
+        uses: actions/deploy-pages@v4
