@@ -27,13 +27,7 @@ jobs:
       - name: Inject API key into config.js
         env:
           PANGEA_API_KEY: ${{ secrets.PANGEA_API_KEY }}
-        run: |
-          python3 - <<'PYEOF'
-          import os
-          key = os.environ.get('PANGEA_API_KEY', '')
-          with open('config.js', 'w') as f:
-              f.write('window.PANGEA_CONFIG = { apiKey: "' + key + '" };\n')
-          PYEOF
+        run: python3 write_config.py
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
