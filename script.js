@@ -2187,214 +2187,415 @@ window.addEventListener('load', function() {
 // ============================================================================
 // PANGEA API INTEGRATION
 // ============================================================================
+//
+// WHAT IS THIS?
+// -------------
+// Pangea is Vumatel's internal platform that tracks network incidents (outages,
+// maintenance, fiber breaks, etc.). It exposes a REST API — a way for other
+// programs to ask it questions over the internet and get answers as JSON data.
+//
+// WHAT DOES THIS CODE DO?
+// -----------------------
+// Instead of typing incident details manually into the announcement form,
+// this code:
+//   1. Calls the Pangea API to get a list of active incidents
+//   2. Displays them in a dropdown on the page
+//   3. When you pick one, automatically fills in the form fields
+//      (affected areas, incident type, status, dates, description, etc.)
+//
+// HOW THE API KEY WORKS (SECURITY):
+// ----------------------------------
+// The API key is like a password that proves we are allowed to use the API.
+// We NEVER write it directly in this file because this file is public on GitHub.
+// Instead:
+//   - Locally:    it lives in config.js (which is listed in .gitignore so Git ignores it)
+//   - Live site:  GitHub Actions (our automated deployment robot) injects it
+//                 from a GitHub Secret (a secure vault in GitHub settings)
+//                 into config.js at build time, so it never appears in the source code.
+//
+// ============================================================================
 
+// The base URL of the Pangea API — all requests start with this address
 const PANGEA_API_BASE = 'https://pangea-staging.vumatel.co.za';
-// Key is injected via config.js (gitignored). Never hardcode here.
-const PANGEA_API_KEY  = (window.PANGEA_CONFIG && window.PANGEA_CONFIG.apiKey) ? window.PANGEA_CONFIG.apiKey : '';
 
-let pangeaIncidents = []; // cached list from last fetch
+// Read the API key from config.js (loaded before this script in index.html).
+// If config.js didn't load or the key is missing, default to an empty string.
+// The '&&' checks mean: "only try to read apiKey if PANGEA_CONFIG exists first"
+const PANGEA_API_KEY = (window.PANGEA_CONFIG && window.PANGEA_CONFIG.apiKey)
+    ? window.PANGEA_CONFIG.apiKey
+    : '';
 
-/** Fetch incidents from Pangea and populate the selection dropdown */
+// This array stores the list of incidents we got from the last API call.
+// We keep it here (outside the functions) so both fetchPangeaIncidents()
+// and loadSelectedPangeaIncident() can share the same data.
+let pangeaIncidents = [];
+
+// ============================================================================
+// FUNCTION: fetchPangeaIncidents
+// ============================================================================
+// Called when the user clicks the "Fetch Incidents" button.
+// Makes an HTTP GET request to Pangea, parses the response,
+// and populates the dropdown with the incident list.
+// ============================================================================
 function fetchPangeaIncidents() {
-    const type      = document.getElementById('pangeaEventType').value;
-    const statusEl  = document.getElementById('pangeaStatus');
-    const dropEl    = document.getElementById('pangeaIncidentDropdown');
+    // Read the selected filter value from the dropdown (open / future / historical)
+    const type = document.getElementById('pangeaEventType').value;
 
+    // Get references to the status message element and the dropdown container
+    const statusEl = document.getElementById('pangeaStatus');
+    const dropEl   = document.getElementById('pangeaIncidentDropdown');
+
+    // Show a "loading" message while we wait for the API to respond
     statusEl.style.display = 'block';
     statusEl.textContent   = '⏳ Fetching incidents…';
-    statusEl.style.color   = '#3B82F6';
-    dropEl.style.display   = 'none';
+    statusEl.style.color   = '#3B82F6'; // blue
+    dropEl.style.display   = 'none';   // hide old dropdown until new data arrives
 
+    // --- THE API CALL ---
+    // fetch() is a built-in browser function that makes HTTP requests.
+    // We build the URL by appending the filter type as a query parameter.
+    // encodeURIComponent() makes the value URL-safe (e.g. spaces become %20).
     fetch(PANGEA_API_BASE + '/support/isp-events/?type=' + encodeURIComponent(type), {
-        method: 'GET',
+        method: 'GET',          // We are reading data, not sending it, so we use GET
         headers: {
-            'accept': 'application/json',
-            'APIKEY': PANGEA_API_KEY
+            'accept': 'application/json',  // Tell the API we want JSON back
+            'APIKEY': PANGEA_API_KEY       // Our authentication key
         }
     })
+
+    // --- STEP 1: Check the HTTP response ---
+    // .then() means "when the API responds, do this..."
+    // The 'response' object contains the raw HTTP response (status code, headers, body).
     .then(function(response) {
+        // response.ok is true for status codes 200-299 (success)
+        // If it's false (e.g. 401 Unauthorized, 404 Not Found), throw an error
         if (!response.ok) { throw new Error('HTTP ' + response.status); }
+
+        // Parse the response body as JSON and pass it to the next .then()
         return response.json();
     })
+
+    // --- STEP 2: Process the JSON data ---
+    // 'data' is the full parsed JSON object returned by Pangea.
+    // The actual incident list is nested at: data.events.results
+    // Example structure:
+    //   {
+    //     "events": {
+    //       "count": 25,
+    //       "total_records": 68,
+    //       "next": "...page=2...",
+    //       "results": [ { incident1 }, { incident2 }, ... ]
+    //     }
+    //   }
     .then(function(data) {
-        // Log raw response so we can diagnose shape issues
+        // Log the raw response to the browser console for debugging.
+        // slice(0, 800) limits the output to 800 characters so the console isn't flooded.
         console.log('Pangea raw response:', JSON.stringify(data).slice(0, 800));
-        // Handle various response shapes from the API
+
+        // We need to find the array of incidents inside the response.
+        // APIs don't always return data in the same shape, so we try multiple paths:
         var list = [];
+
         if (Array.isArray(data)) {
+            // Case 1: The entire response IS the array  →  [ {...}, {...} ]
             list = data;
         } else if (data && data.events && Array.isArray(data.events.results)) {
+            // Case 2: Pangea's actual structure  →  data.events.results  ← THIS IS THE ONE
             list = data.events.results;
         } else if (data && Array.isArray(data.results)) {
+            // Case 3: Common API pattern  →  data.results
             list = data.results;
         } else if (data && Array.isArray(data.events)) {
+            // Case 4: events is directly an array  →  data.events
             list = data.events;
         } else if (data && Array.isArray(data.data)) {
+            // Case 5: Another common pattern  →  data.data
             list = data.data;
         } else if (data && typeof data === 'object') {
+            // Case 6: Search all top-level keys for any array value
             var keys = Object.keys(data);
             for (var i = 0; i < keys.length; i++) {
                 if (Array.isArray(data[keys[i]])) { list = data[keys[i]]; break; }
             }
         }
-        // Wrap single object in array
+
+        // Edge case: API returned a single incident object instead of an array
+        // We wrap it in an array [ inc ] so the rest of the code works the same way
         if (list.length === 0 && data && typeof data === 'object' && !Array.isArray(data) && data.id) {
             list = [data];
         }
+
+        // Store the incidents globally so loadSelectedPangeaIncident() can access them
         pangeaIncidents = list;
+
+        // If no incidents were found after all that, show an info message
         if (pangeaIncidents.length === 0) {
             statusEl.textContent = 'ℹ️ No incidents found for type: ' + type;
             statusEl.style.color = '#888';
-            return;
+            return; // Stop here, nothing to show
         }
+
+        // Show how many incidents were found
         statusEl.textContent = '✅ ' + pangeaIncidents.length + ' incident(s) found — select one below.';
-        statusEl.style.color = '#10B981';
+        statusEl.style.color = '#10B981'; // green
+
+        // Build the dropdown options from the incident list
         populatePangeaDropdown(pangeaIncidents);
+
+        // Show the dropdown container (it was hidden above)
         dropEl.style.display = 'block';
     })
+
+    // --- ERROR HANDLER ---
+    // .catch() runs if anything in the chain above throws an error
+    // (network failure, HTTP error, JSON parse failure, etc.)
     .catch(function(err) {
         statusEl.textContent = '❌ Fetch failed: ' + err.message;
-        statusEl.style.color = '#EF4444';
+        statusEl.style.color = '#EF4444'; // red
         console.error('Pangea API error:', err);
     });
 }
 
-/** Fill the incident selection dropdown with fetched data */
+// ============================================================================
+// FUNCTION: populatePangeaDropdown
+// ============================================================================
+// Takes the array of incidents and creates an <option> element for each one
+// inside the <select> dropdown on the page.
+// Each option shows: INC-000004021 | NETWORK_INCIDENT | Johannesburg
+// ============================================================================
 function populatePangeaDropdown(incidents) {
     const select = document.getElementById('pangeaIncidentSelect');
+
+    // Clear any previous options and add a default placeholder
     select.innerHTML = '<option value="">-- Choose an incident --</option>';
+
+    // Safety check: if incidents is not an array, log a warning and stop
     if (!Array.isArray(incidents)) {
         console.warn('populatePangeaDropdown: expected array, got', typeof incidents, incidents);
         return;
     }
+
+    // Loop through each incident and create a dropdown option for it
     incidents.forEach(function(inc, idx) {
-        const id    = inc.prefixed_id || inc.record_id || ('INC-' + idx);
-        const type  = inc.event_type  || 'Event';
-        const area  = inc.affected_areas || (Array.isArray(inc.cities) && inc.cities[0]) || inc.suburb || inc.nwi_name || 'Unknown area';
-        const opt   = document.createElement('option');
-        opt.value       = idx;
-        opt.textContent = id + ' | ' + type + ' | ' + area;
-        select.appendChild(opt);
+        // Use the best available ID field, fallback to a generated one
+        const id   = inc.prefixed_id || inc.record_id || ('INC-' + idx);
+
+        // Event type (e.g. NETWORK_INCIDENT, PLANNED_MAINTENANCE)
+        const type = inc.event_type || 'Event';
+
+        // Best available area description — try multiple fields
+        const area = inc.affected_areas
+            || (Array.isArray(inc.cities) && inc.cities[0])  // first city in list
+            || inc.suburb
+            || inc.nwi_name
+            || 'Unknown area';
+
+        // Create a new <option> HTML element
+        const opt = document.createElement('option');
+        opt.value       = idx;                                  // store the array index as value
+        opt.textContent = id + ' | ' + type + ' | ' + area;   // display text
+
+        select.appendChild(opt); // add it to the dropdown
     });
 }
 
-/** Map an API event_type string to one of the form's dropdown values */
+// ============================================================================
+// FUNCTION: mapPangeaEventType
+// ============================================================================
+// The Pangea API uses its own event type names (e.g. "NETWORK_INCIDENT").
+// Our form dropdown uses different names (e.g. "Network Outage").
+// This function translates between them using keyword matching.
+// ============================================================================
 function mapPangeaEventType(apiType) {
-    if (!apiType) return '';
+    if (!apiType) return ''; // nothing to map
+
+    // Normalise: lowercase + replace underscores with spaces for easy matching
+    // e.g. "NETWORK_INCIDENT" → "network incident"
     const t = apiType.toLowerCase().replace(/_/g, ' ');
-    if (t.includes('emergency'))                          return 'Emergency Maintenance';
+
+    if (t.includes('emergency'))                             return 'Emergency Maintenance';
     if (t.includes('planned') || t.includes('maintenance')) return 'Planned Maintenance';
-    if (t.includes('interruption'))                       return 'Service Interruption';
-    if (t.includes('outage'))                             return 'Network Outage';
-    if (t.includes('restor'))                             return 'Service Restoration';
-    return 'General Notice';
+    if (t.includes('interruption'))                         return 'Service Interruption';
+    if (t.includes('outage'))                               return 'Network Outage';
+    if (t.includes('restor'))                               return 'Service Restoration';
+    return 'General Notice'; // default if nothing matched
 }
 
-/** Map an API status string to one of the form's status values */
+// ============================================================================
+// FUNCTION: mapPangeaStatus
+// ============================================================================
+// Same idea as mapPangeaEventType — translates Pangea status values
+// (e.g. "Pending Investigation") into the form's status dropdown values.
+// ============================================================================
 function mapPangeaStatus(apiStatus) {
     if (!apiStatus) return '';
-    const s = apiStatus.toLowerCase();
+
+    const s = apiStatus.toLowerCase(); // normalise to lowercase
+
     if (s.includes('resolv') || s.includes('restor') || s.includes('closed') || s.includes('complet')) return 'Resolved';
     if (s.includes('investigat'))                        return 'Investigating';
     if (s.includes('schedul') || s.includes('planned') || s.includes('future')) return 'Scheduled';
-    return 'In Progress';
+    return 'In Progress'; // default
 }
 
-/** Parse an API date/time string into { date:'YYYY-MM-DD', time:'HH:MM' } */
+// ============================================================================
+// FUNCTION: parsePangeaDatetime
+// ============================================================================
+// The API returns dates as ISO 8601 strings like "2026-04-07T07:00:12.000Z"
+// (the Z means UTC/Zulu time). Our HTML date/time inputs need them split into:
+//   date: "2026-04-07"   (YYYY-MM-DD)
+//   time: "07:00"        (HH:MM)
+// ============================================================================
 function parsePangeaDatetime(dtStr) {
-    if (!dtStr) return null;
+    if (!dtStr) return null; // nothing to parse
+
+    // JavaScript's Date object can parse ISO strings directly
     const d = new Date(dtStr);
+
+    // isNaN check: if the string was not a valid date, Date returns "Invalid Date"
     if (isNaN(d.getTime())) return null;
+
     return {
-        date: d.toISOString().split('T')[0],
-        time: d.toTimeString().slice(0, 5)
+        date: d.toISOString().split('T')[0],  // "2026-04-07T07:00:12.000Z" → "2026-04-07"
+        time: d.toTimeString().slice(0, 5)    // "07:00:12 GMT+..." → "07:00"
     };
 }
 
-/** Map a Pangea product name to 'sadv' or 'infinifi' */
+// ============================================================================
+// FUNCTION: mapPangeaBrand
+// ============================================================================
+// Each incident in Pangea has a 'product' field (e.g. "Vuma Core;Vuma Reach").
+// This function checks if the product name contains "infinifi" or "sadv"
+// and returns the matching brand key used in this app.
+// ============================================================================
 function mapPangeaBrand(product) {
     if (!product) return null;
     const p = product.toLowerCase();
     if (p.includes('infinifi')) return 'infinifi';
     if (p.includes('sadv'))     return 'sadv';
-    return null;
+    return null; // product doesn't match either brand — leave brand unchanged
 }
 
-/** Load the selected Pangea incident into the announcement form */
+// ============================================================================
+// FUNCTION: loadSelectedPangeaIncident
+// ============================================================================
+// Called when the user clicks "Load into Form ↓".
+// Reads the selected incident from the dropdown, then maps its API fields
+// to the announcement form fields one by one.
+// ============================================================================
 function loadSelectedPangeaIncident() {
     const select = document.getElementById('pangeaIncidentSelect');
+
+    // If nothing is selected, do nothing
     if (!select.value && select.value !== 0) return;
+
+    // Retrieve the full incident object using the index stored in option.value
+    // parseInt() converts the string "3" to the number 3
     const inc = pangeaIncidents[parseInt(select.value)];
     if (!inc) return;
 
-    // Brand
+    // --- BRAND ---
+    // Try to detect SADV vs Infinifi from the product field
     const brand = mapPangeaBrand(inc.product);
     if (brand) {
         document.getElementById('brandSelect').value = brand;
+        // Manually fire a 'change' event so the contact info also updates
+        // (the brand dropdown has a listener that changes the WhatsApp number)
         document.getElementById('brandSelect').dispatchEvent(new Event('change'));
     }
 
-    // Incident type
+    // --- INCIDENT TYPE ---
+    // Translate the Pangea event_type to the form's dropdown option
     const mappedType = mapPangeaEventType(inc.event_type);
     if (mappedType) document.getElementById('incidentType').value = mappedType;
 
-    // Status
+    // --- STATUS ---
+    // isp_event_status is the main status field; fall back to 'status' if missing
     const mappedStatus = mapPangeaStatus(inc.isp_event_status || inc.status);
     if (mappedStatus) document.getElementById('incidentStatus').value = mappedStatus;
 
-    // Affected areas — merge affected_areas + cities + suburb
+    // --- AFFECTED AREAS ---
+    // Merge all available area fields to give the most complete picture.
+    // We check for duplicates before adding each one (case-insensitive).
     var areas = [];
     if (inc.affected_areas) areas.push(inc.affected_areas);
     if (Array.isArray(inc.cities) && inc.cities.length) {
-        inc.cities.forEach(function(c) { if (c && !areas.join(' ').toLowerCase().includes(c.toLowerCase())) areas.push(c); });
+        inc.cities.forEach(function(c) {
+            // Only add the city if it's not already mentioned in the areas list
+            if (c && !areas.join(' ').toLowerCase().includes(c.toLowerCase())) {
+                areas.push(c);
+            }
+        });
     }
-    if (inc.suburb && !areas.join(' ').toLowerCase().includes(inc.suburb.toLowerCase())) areas.push(inc.suburb);
-    if (areas.length) document.getElementById('affectedAreas').value = areas.join(', ');
+    if (inc.suburb && !areas.join(' ').toLowerCase().includes(inc.suburb.toLowerCase())) {
+        areas.push(inc.suburb);
+    }
+    if (areas.length) {
+        document.getElementById('affectedAreas').value = areas.join(', ');
+    }
 
-    // Title — construct from event type + primary area
+    // --- TITLE ---
+    // Build a human-readable title from event type + primary area.
+    // replace(/_/g, ' ')  →  "NETWORK_INCIDENT" becomes "NETWORK INCIDENT"
+    // replace(/\b\w/g, ...) capitalises the first letter of each word
     var titleArea = inc.affected_areas || (Array.isArray(inc.cities) && inc.cities[0]) || inc.nwi_name || '';
-    var titleType = inc.event_type ? inc.event_type.replace(/_/g, ' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); }) : 'Network Event';
+    var titleType = inc.event_type
+        ? inc.event_type.replace(/_/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); })
+        : 'Network Event';
     document.getElementById('title').value = titleType + (titleArea ? ' - ' + titleArea : '');
 
-    // Description — nested under details.reason or top-level
+    // --- DESCRIPTION ---
+    // Pangea nests the reason inside a 'details' sub-object.
+    // We try details.reason first, then fall back to other fields.
     var desc = (inc.details && inc.details.reason) || inc.details || inc.website_description || '';
     if (desc) document.getElementById('description').value = desc;
 
-    // Impact
+    // --- IMPACT ---
+    // system_impact_category describes what services are affected
     var impact = (inc.details && inc.details.system_impact_category) || inc.impact || '';
     if (impact) document.getElementById('impact').value = impact;
 
-    // Start date/time
+    // --- START DATE/TIME ---
     var start = parsePangeaDatetime(inc.event_start_date);
     if (start) {
         document.getElementById('startDate').value = start.date;
         document.getElementById('startTime').value = start.time;
     }
 
-    // End date/time
+    // --- END DATE/TIME ---
     var end = parsePangeaDatetime(inc.event_end_date);
     if (end) {
         document.getElementById('endDate').value = end.date;
         document.getElementById('endTime').value = end.time;
     }
 
-    // Reference number
+    // --- REFERENCE NUMBER ---
+    // prefixed_id is the human-readable ID (e.g. INC-000004021)
+    // record_id is the internal Salesforce ID — use as fallback
     var ref = inc.prefixed_id || inc.record_id;
     if (ref) document.getElementById('reference').value = ref;
 
-    // Auto-switch to restoration template if incident is resolved/restored
+    // --- RESTORATION TEMPLATE ---
+    // If the incident is already resolved/restored, automatically tick the
+    // "Use Restoration Template" checkbox to show the GOOD NEWS design
     var statusLow = (inc.isp_event_status || inc.status || '').toLowerCase();
     document.getElementById('useRestorationTemplate').checked =
         statusLow.includes('restor') || statusLow.includes('resolv') || statusLow.includes('closed');
 
-    // Confirmation and scroll to form
+    // --- DONE ---
+    // Show a success message and smoothly scroll down to the form
     var statusEl = document.getElementById('pangeaStatus');
     statusEl.textContent = '✅ Form filled from ' + (inc.prefixed_id || inc.record_id || 'incident') + '. Review details and click Generate.';
-    statusEl.style.color = '#10B981';
+    statusEl.style.color = '#10B981'; // green
     document.getElementById('announcementForm').scrollIntoView({ behavior: 'smooth' });
 }
 
-// Wire up the Pangea panel buttons
+// ============================================================================
+// BUTTON EVENT LISTENERS
+// ============================================================================
+// These two lines connect the HTML buttons to the JavaScript functions above.
+// addEventListener('click', fn) means: "when this button is clicked, run fn()"
+// ============================================================================
 document.getElementById('fetchPangeaBtn').addEventListener('click', fetchPangeaIncidents);
 document.getElementById('loadIncidentBtn').addEventListener('click', loadSelectedPangeaIncident);
 
