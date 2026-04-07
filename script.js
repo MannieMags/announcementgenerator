@@ -2185,5 +2185,189 @@ window.addEventListener('load', function() {
 });
 
 // ============================================================================
+// PANGEA API INTEGRATION
+// ============================================================================
+
+const PANGEA_API_BASE = 'https://pangea-staging.vumatel.co.za';
+const PANGEA_API_KEY  = 'rurGtn8X8Y4pFVYY5EucHZBMRo833Q68';
+
+let pangeaIncidents = []; // cached list from last fetch
+
+/** Fetch incidents from Pangea and populate the selection dropdown */
+function fetchPangeaIncidents() {
+    const type      = document.getElementById('pangeaEventType').value;
+    const statusEl  = document.getElementById('pangeaStatus');
+    const dropEl    = document.getElementById('pangeaIncidentDropdown');
+
+    statusEl.style.display = 'block';
+    statusEl.textContent   = '⏳ Fetching incidents…';
+    statusEl.style.color   = '#3B82F6';
+    dropEl.style.display   = 'none';
+
+    fetch(PANGEA_API_BASE + '/support/isp-events/?type=' + encodeURIComponent(type), {
+        method: 'GET',
+        headers: {
+            'accept': 'application/json',
+            'APIKEY': PANGEA_API_KEY
+        }
+    })
+    .then(function(response) {
+        if (!response.ok) { throw new Error('HTTP ' + response.status); }
+        return response.json();
+    })
+    .then(function(data) {
+        pangeaIncidents = Array.isArray(data) ? data : (data.results || data.events || []);
+        if (pangeaIncidents.length === 0) {
+            statusEl.textContent = 'ℹ️ No incidents found for type: ' + type;
+            statusEl.style.color = '#888';
+            return;
+        }
+        statusEl.textContent = '✅ ' + pangeaIncidents.length + ' incident(s) found — select one below.';
+        statusEl.style.color = '#10B981';
+        populatePangeaDropdown(pangeaIncidents);
+        dropEl.style.display = 'block';
+    })
+    .catch(function(err) {
+        statusEl.textContent = '❌ Fetch failed: ' + err.message;
+        statusEl.style.color = '#EF4444';
+        console.error('Pangea API error:', err);
+    });
+}
+
+/** Fill the incident selection dropdown with fetched data */
+function populatePangeaDropdown(incidents) {
+    const select = document.getElementById('pangeaIncidentSelect');
+    select.innerHTML = '<option value="">-- Choose an incident --</option>';
+    incidents.forEach(function(inc, idx) {
+        const id    = inc.prefixed_id || inc.record_id || ('INC-' + idx);
+        const type  = inc.event_type  || 'Event';
+        const area  = inc.affected_areas || (Array.isArray(inc.cities) && inc.cities[0]) || inc.suburb || inc.nwi_name || 'Unknown area';
+        const opt   = document.createElement('option');
+        opt.value       = idx;
+        opt.textContent = id + ' | ' + type + ' | ' + area;
+        select.appendChild(opt);
+    });
+}
+
+/** Map an API event_type string to one of the form's dropdown values */
+function mapPangeaEventType(apiType) {
+    if (!apiType) return '';
+    const t = apiType.toLowerCase().replace(/_/g, ' ');
+    if (t.includes('emergency'))                          return 'Emergency Maintenance';
+    if (t.includes('planned') || t.includes('maintenance')) return 'Planned Maintenance';
+    if (t.includes('interruption'))                       return 'Service Interruption';
+    if (t.includes('outage'))                             return 'Network Outage';
+    if (t.includes('restor'))                             return 'Service Restoration';
+    return 'General Notice';
+}
+
+/** Map an API status string to one of the form's status values */
+function mapPangeaStatus(apiStatus) {
+    if (!apiStatus) return '';
+    const s = apiStatus.toLowerCase();
+    if (s.includes('resolv') || s.includes('restor') || s.includes('closed') || s.includes('complet')) return 'Resolved';
+    if (s.includes('investigat'))                        return 'Investigating';
+    if (s.includes('schedul') || s.includes('planned') || s.includes('future')) return 'Scheduled';
+    return 'In Progress';
+}
+
+/** Parse an API date/time string into { date:'YYYY-MM-DD', time:'HH:MM' } */
+function parsePangeaDatetime(dtStr) {
+    if (!dtStr) return null;
+    const d = new Date(dtStr);
+    if (isNaN(d.getTime())) return null;
+    return {
+        date: d.toISOString().split('T')[0],
+        time: d.toTimeString().slice(0, 5)
+    };
+}
+
+/** Map a Pangea product name to 'sadv' or 'infinifi' */
+function mapPangeaBrand(product) {
+    if (!product) return null;
+    const p = product.toLowerCase();
+    if (p.includes('infinifi')) return 'infinifi';
+    if (p.includes('sadv'))     return 'sadv';
+    return null;
+}
+
+/** Load the selected Pangea incident into the announcement form */
+function loadSelectedPangeaIncident() {
+    const select = document.getElementById('pangeaIncidentSelect');
+    if (!select.value && select.value !== 0) return;
+    const inc = pangeaIncidents[parseInt(select.value)];
+    if (!inc) return;
+
+    // Brand
+    const brand = mapPangeaBrand(inc.product);
+    if (brand) {
+        document.getElementById('brandSelect').value = brand;
+        document.getElementById('brandSelect').dispatchEvent(new Event('change'));
+    }
+
+    // Incident type
+    const mappedType = mapPangeaEventType(inc.event_type);
+    if (mappedType) document.getElementById('incidentType').value = mappedType;
+
+    // Status
+    const mappedStatus = mapPangeaStatus(inc.isp_event_status || inc.status);
+    if (mappedStatus) document.getElementById('incidentStatus').value = mappedStatus;
+
+    // Affected areas — merge affected_areas + cities + suburb
+    var areas = [];
+    if (inc.affected_areas) areas.push(inc.affected_areas);
+    if (Array.isArray(inc.cities) && inc.cities.length) {
+        inc.cities.forEach(function(c) { if (c && !areas.join(' ').toLowerCase().includes(c.toLowerCase())) areas.push(c); });
+    }
+    if (inc.suburb && !areas.join(' ').toLowerCase().includes(inc.suburb.toLowerCase())) areas.push(inc.suburb);
+    if (areas.length) document.getElementById('affectedAreas').value = areas.join(', ');
+
+    // Title — construct from event type + primary area
+    var titleArea = inc.affected_areas || (Array.isArray(inc.cities) && inc.cities[0]) || inc.nwi_name || '';
+    var titleType = inc.event_type ? inc.event_type.replace(/_/g, ' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); }) : 'Network Event';
+    document.getElementById('title').value = titleType + (titleArea ? ' - ' + titleArea : '');
+
+    // Description
+    var desc = inc.details || inc.website_description || '';
+    if (desc) document.getElementById('description').value = desc;
+
+    // Impact
+    if (inc.impact) document.getElementById('impact').value = inc.impact;
+
+    // Start date/time
+    var start = parsePangeaDatetime(inc.event_start_date);
+    if (start) {
+        document.getElementById('startDate').value = start.date;
+        document.getElementById('startTime').value = start.time;
+    }
+
+    // End date/time
+    var end = parsePangeaDatetime(inc.event_end_date);
+    if (end) {
+        document.getElementById('endDate').value = end.date;
+        document.getElementById('endTime').value = end.time;
+    }
+
+    // Reference number
+    var ref = inc.prefixed_id || inc.record_id;
+    if (ref) document.getElementById('reference').value = ref;
+
+    // Auto-switch to restoration template if incident is resolved/restored
+    var statusLow = (inc.isp_event_status || inc.status || '').toLowerCase();
+    document.getElementById('useRestorationTemplate').checked =
+        statusLow.includes('restor') || statusLow.includes('resolv') || statusLow.includes('closed');
+
+    // Confirmation and scroll to form
+    var statusEl = document.getElementById('pangeaStatus');
+    statusEl.textContent = '✅ Form filled from ' + (inc.prefixed_id || inc.record_id || 'incident') + '. Review details and click Generate.';
+    statusEl.style.color = '#10B981';
+    document.getElementById('announcementForm').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Wire up the Pangea panel buttons
+document.getElementById('fetchPangeaBtn').addEventListener('click', fetchPangeaIncidents);
+document.getElementById('loadIncidentBtn').addEventListener('click', loadSelectedPangeaIncident);
+
+// ============================================================================
 // END OF SCRIPT
 // ============================================================================
