@@ -2469,16 +2469,37 @@ function parsePangeaDatetime(dtStr) {
 // ============================================================================
 // FUNCTION: mapPangeaBrand
 // ============================================================================
-// Each incident in Pangea has a 'product' field (e.g. "Vuma Core;Vuma Reach").
-// This function checks if the product name contains "infinifi" or "sadv"
-// and returns the matching brand key used in this app.
+// The Pangea 'product' field contains Vuma product names, sometimes multiple
+// separated by semicolons (e.g. "Vuma Core;Vuma Reach").
+//
+// Brand mapping:
+//   Vuma Reach  → SADV
+//   Vuma Key    → SADV
+//   Vuma Core   → Infinifi
+//
+// If a product contains BOTH (e.g. "Vuma Core;Vuma Reach") we check which
+// appears first and use that, since mixed incidents are unusual.
 // ============================================================================
 function mapPangeaBrand(product) {
     if (!product) return null;
     const p = product.toLowerCase();
-    if (p.includes('infinifi')) return 'infinifi';
-    if (p.includes('sadv'))     return 'sadv';
-    return null; // product doesn't match either brand — leave brand unchanged
+
+    // Find the position of each product name in the string (-1 = not found)
+    const corePos  = p.indexOf('core');
+    const reachPos = p.indexOf('reach');
+    const keyPos   = p.indexOf('key');
+
+    // Build a list of matches with their positions so we can pick the first one
+    var matches = [];
+    if (corePos  !== -1) matches.push({ brand: 'infinifi', pos: corePos  });
+    if (reachPos !== -1) matches.push({ brand: 'sadv',     pos: reachPos });
+    if (keyPos   !== -1) matches.push({ brand: 'sadv',     pos: keyPos   });
+
+    if (matches.length === 0) return null; // no recognised product
+
+    // Sort by position and return the brand of the first product mentioned
+    matches.sort(function(a, b) { return a.pos - b.pos; });
+    return matches[0].brand;
 }
 
 // ============================================================================
