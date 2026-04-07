@@ -2413,12 +2413,17 @@ function mapPangeaEventType(apiType) {
     // e.g. "NETWORK_INCIDENT" → "network incident"
     const t = apiType.toLowerCase().replace(/_/g, ' ');
 
+    // Check most specific terms first so nothing falls through incorrectly
     if (t.includes('emergency'))                             return 'Emergency Maintenance';
+    if (t.includes('restor'))                               return 'Service Restoration';
     if (t.includes('planned') || t.includes('maintenance')) return 'Planned Maintenance';
     if (t.includes('interruption'))                         return 'Service Interruption';
     if (t.includes('outage'))                               return 'Network Outage';
-    if (t.includes('restor'))                               return 'Service Restoration';
-    return 'General Notice'; // default if nothing matched
+    // NETWORK_INCIDENT is Pangea's term for an unplanned live outage
+    if (t.includes('incident'))                             return 'Network Outage';
+    // Anything that mentions degradation or connectivity issues
+    if (t.includes('degrad') || t.includes('connect'))      return 'Service Interruption';
+    return 'General Notice'; // only used for genuinely informational notices
 }
 
 // ============================================================================
@@ -2535,13 +2540,12 @@ function loadSelectedPangeaIncident() {
     }
 
     // --- TITLE ---
-    // Build a human-readable title from event type + primary area.
-    // replace(/_/g, ' ')  →  "NETWORK_INCIDENT" becomes "NETWORK INCIDENT"
-    // replace(/\b\w/g, ...) capitalises the first letter of each word
+    // Use the already-translated type (e.g. "Network Outage") rather than
+    // the raw API string ("NETWORK_INCIDENT") so it reads naturally.
     var titleArea = inc.affected_areas || (Array.isArray(inc.cities) && inc.cities[0]) || inc.nwi_name || '';
-    var titleType = inc.event_type
+    var titleType = mappedType || (inc.event_type
         ? inc.event_type.replace(/_/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); })
-        : 'Network Event';
+        : 'Network Event');
     document.getElementById('title').value = titleType + (titleArea ? ' - ' + titleArea : '');
 
     // --- DESCRIPTION ---
@@ -2563,10 +2567,24 @@ function loadSelectedPangeaIncident() {
     }
 
     // --- END DATE/TIME ---
-    var end = parsePangeaDatetime(inc.event_end_date);
-    if (end) {
-        document.getElementById('endDate').value = end.date;
-        document.getElementById('endTime').value = end.time;
+    // Only populate end time when it is meaningful:
+    //   • Resolved/Restored/Closed  → end time = actual fix time
+    //   • Planned/Scheduled         → end time = known maintenance window end
+    // For active/investigating incidents we DON'T fill it — there is no confirmed
+    // end time yet and prefilling it would show wrong information to customers.
+    var statusForEnd = (inc.isp_event_status || inc.status || '').toLowerCase();
+    var isEnded    = statusForEnd.includes('resolv') || statusForEnd.includes('restor') || statusForEnd.includes('closed') || statusForEnd.includes('complet');
+    var isPlanned  = statusForEnd.includes('schedul') || statusForEnd.includes('planned') || statusForEnd.includes('future');
+    if (isEnded || isPlanned) {
+        var end = parsePangeaDatetime(inc.event_end_date);
+        if (end) {
+            document.getElementById('endDate').value = end.date;
+            document.getElementById('endTime').value = end.time;
+        }
+    } else {
+        // Clear end fields — incident is still active, no confirmed end time
+        document.getElementById('endDate').value = '';
+        document.getElementById('endTime').value = '';
     }
 
     // --- REFERENCE NUMBER ---
